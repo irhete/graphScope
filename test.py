@@ -1,33 +1,36 @@
-class Graph:
+class GraphSegment:
     adjacencyString = ""
     n = 0
     m = 0
+    cost = 0
     def __init__(self, adjacencyMatrix):
         for row in adjacencyMatrix:
             adjacencyString += row
         n = len(adjacencyMatrix)
         m = len(adjacencyMatrix[0])
-
-class Segment:
+        cost = encodingCost(graph)
     def merge(self, graph):
         return 0
     
 
-def encodingCost(graph, segment):
+def encodingCost(segment):
+    return 0
+def union(graph1, graph2):
+    return 0
+def searchKL(segment):
     return 0
 
 segments = []
 
-def graphScope(segment, segmentCost, graph):
-    unionCost = encodingCost(segment, graph)
-    graphCost = encodingCost(graph)
-    if unionCost - segmentCost < graphCost:
+#segment and graph are instances of GraphSegment
+def graphScope(segment, graph):
+    unionCost = encodingCost(segment)
+    if unionCost - segment.cost < graph.cost:
         segment.merge(graph)
         searchKL(segment)
     else:
-        newSegment = Segment(graph)
-        segments.append(newSegment)
-        searchKL(newSegment)
+        segments.append(graph)
+        searchKL(graph)
 
     
     
