@@ -5,6 +5,7 @@
 #include <fstream>
 #include <map>
 #include <queue>
+#include <bitset>
 using namespace std;
 
 vector<string> &split(const string &s, char delim, vector<string> &elems) {
@@ -29,6 +30,11 @@ struct Edge {
 	}
 };
 
+struct GraphSegment {
+	string adjacency_matrix;
+
+};
+
 class CompareEdges {
 public:
 	bool operator()(Edge& e1, Edge& e2) {
@@ -40,9 +46,9 @@ public:
 
 void read_graph(string filename,
 		priority_queue<Edge, vector<Edge>, CompareEdges> &edges,
-		map<int, int> &nodes) {
+		map<int, int> &nodes, map<int, int> &renumbered_nodes) {
 	string line;
-	ifstream myfile(filename);
+	ifstream myfile(filename.c_str());
 	if (myfile.is_open()) {
 		int node_index = 0;
 		while (getline(myfile, line)) {
@@ -53,11 +59,13 @@ void read_graph(string filename,
 			map<int, int>::iterator iter = nodes.find(v1);
 			if (iter == nodes.end()) {
 				nodes[v1] = node_index;
+				renumbered_nodes[node_index] = v1;
 				node_index++;
 			}
 			iter = nodes.find(v2);
 			if (iter == nodes.end()) {
 				nodes[v2] = node_index;
+				renumbered_nodes[node_index] = v2;
 				node_index++;
 			}
 			edges.push(Edge(nodes[v1], nodes[v2], timestamp));
@@ -69,19 +77,28 @@ void read_graph(string filename,
 int main() {
 	priority_queue<Edge, vector<Edge>, CompareEdges> edges;
 	map<int, int> nodes;
+	map<int, int> renumbered_nodes;
+	const string filename = "small_graph.txt";
 
-	read_graph("/wrk/stacc-sna/data_extract/sample_network_65.txt", edges,
-			nodes);
+	read_graph(filename, edges, nodes, renumbered_nodes);
+	cout << nodes.size() << endl;
+	int vertex_count = 4;
+	const int bitset_size = 16;
+	vector<bitset<bitset_size> > segments;
 
-	int i = 0;
-	cout << edges.top().timestamp << endl;
+	bitset<bitset_size> segment;
 	while (!edges.empty()) {
-		i++;
-		edges.pop();
+		Edge e = edges.top();
+		while (!edges.empty() && edges.top().timestamp == e.timestamp) {
+			e = edges.top();
+			edges.pop();
+			cout << e.v1 << ", " << e.v2 << ", " << e.timestamp << endl;
+			segment.set(vertex_count * e.v1 + e.v2);
+			segment.set(vertex_count * e.v2 + e.v1);
+		}
+		cout << segment << endl;
+		segments.push_back(segment);
 	}
-
-	cout << "Edges: " << i << endl;
-	cout << "Nodes: " << nodes.size() << endl;
 
 	return 0;
 
