@@ -9,7 +9,7 @@
 #include <cmath>
 using namespace std;
 
-const int VERTEX_COUNT = 7;
+const int VERTEX_COUNT = 30;
 
 vector<string> &split(const string &s, char delim, vector<string> &elems) {
 	stringstream ss(s);
@@ -261,31 +261,33 @@ bool update_partitions(vector<int>* adjacency_list, int* partitioning,
 		vector<vector<int> > &partition_members, const int k) {
 	bool changed = false;
 	for (int node = 0; node < VERTEX_COUNT; node++) {
-		int best_partition = 0;
-		double best_cost = 100000000;
-		int i = 0;
-		while (partition_members[partitioning[node]][i] != node) {
-			i++;
-		}
-		partition_members[partitioning[node]].erase(
-				partition_members[partitioning[node]].begin() + i);
-		for (int partition = 0; partition < k; partition++) {
-			partitioning[node] = partition;
-			partition_members[partition].push_back(node);
-			double cost = node_cost(partitioning, partition_members,
-					adjacency_list, node, partition);
-			if (cost < best_cost) {
-				best_cost = cost;
-				best_partition = partition;
+		if (partition_members[partitioning[node]].size() > 1) {
+			int best_partition = 0;
+			double best_cost = 100000000;
+			int i = 0;
+			while (partition_members[partitioning[node]][i] != node) {
+				i++;
 			}
-			partition_members[partition].erase(
-					partition_members[partition].end() - 1);
+			partition_members[partitioning[node]].erase(
+					partition_members[partitioning[node]].begin() + i);
+			for (int partition = 0; partition < k; partition++) {
+				partitioning[node] = partition;
+				partition_members[partition].push_back(node);
+				double cost = node_cost(partitioning, partition_members,
+						adjacency_list, node, partition);
+				if (cost < best_cost) {
+					best_cost = cost;
+					best_partition = partition;
+				}
+				partition_members[partition].erase(
+						partition_members[partition].end() - 1);
+			}
+			if (best_partition != partitioning[node]) {
+				changed = true;
+			}
+			partitioning[node] = best_partition;
+			partition_members[best_partition].push_back(node);
 		}
-		if (best_partition != partitioning[node]) {
-			changed = true;
-		}
-		partitioning[node] = best_partition;
-		partition_members[best_partition].push_back(node);
 	}
 
 	return changed;
@@ -423,13 +425,10 @@ int main() {
 			<< "[1, 1, 1, 0, 0, 0, 0, ] shows that nodes 0, 1 and 2 belong to the 1st cluster and 3, 4, 5 and 6 belong to 0th cluster"
 			<< endl;
 	cout << endl;
-	cout
-			<< "*also note that graphScope method for split, update and merge is currently only used in 1 iteration (needs to be fixed later)"
-			<< endl << endl;
 
 	map<int, int> nodes;
 	map<int, int> renumbered_nodes;
-	const string filename = "small_graph.txt";
+	const string filename = "extractedNetwork.o43237";
 	vector<int>* adjacency_list = new vector<int> [VERTEX_COUNT];
 
 	vector<GraphSegment> segments;
@@ -437,17 +436,14 @@ int main() {
 	priority_queue<Edge, vector<Edge>, CompareEdges> edges = read_graph(
 			filename, nodes, renumbered_nodes);
 
-	cout << "edges of graph (node1, node2, timestamp):" << endl;
 	while (!edges.empty()) {
 		Edge e = edges.top();
 		while (!edges.empty() && edges.top().timestamp == e.timestamp) {
 			e = edges.top();
 			edges.pop();
-			cout << e.v1 << ", " << e.v2 << ", " << e.timestamp << endl;
 			adjacency_list[e.v1].push_back(e.v2);
 			adjacency_list[e.v2].push_back(e.v1);
 		}
-		cout << endl;
 		segments.push_back(
 				GraphSegment(graphScope(adjacency_list), e.timestamp));
 		cout << endl;
