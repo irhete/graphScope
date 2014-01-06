@@ -34,8 +34,11 @@ struct Edge {
 };
 
 struct GraphSegment {
-	string adjacency_matrix;
-
+	int* partition;
+	int timestamp;
+	GraphSegment(int* partition, int timestamp) :
+			partition(partition), timestamp(timestamp) {
+	}
 };
 
 class CompareEdges {
@@ -410,18 +413,26 @@ int* graphScope(vector<int>* adjacency_list) {
 }
 
 int main() {
-	cout << "*note that two different representations of partitionings are in use:" << endl;
-	cout << "[(3, 5, 6, 4, )(0, 1, 2, )] shows that there are cluster 0 with nodes 3, 5, 6 and 4 and cluster 1 with nodes 0, 1 and 2" << endl;
-	cout << "[1, 1, 1, 0, 0, 0, 0, ] shows that nodes 0, 1 and 2 belong to the 1st cluster and 3, 4, 5 and 6 belong to 0th cluster" << endl;
+	cout
+			<< "*note that two different representations of partitionings are in use:"
+			<< endl;
+	cout
+			<< "[(3, 5, 6, 4, )(0, 1, 2, )] shows that there are cluster 0 with nodes 3, 5, 6 and 4 and cluster 1 with nodes 0, 1 and 2"
+			<< endl;
+	cout
+			<< "[1, 1, 1, 0, 0, 0, 0, ] shows that nodes 0, 1 and 2 belong to the 1st cluster and 3, 4, 5 and 6 belong to 0th cluster"
+			<< endl;
 	cout << endl;
-	cout << "*also note that graphScope method for split, update and merge is currently only used in 1 iteration (needs to be fixed later)" << endl << endl;
+	cout
+			<< "*also note that graphScope method for split, update and merge is currently only used in 1 iteration (needs to be fixed later)"
+			<< endl << endl;
 
 	map<int, int> nodes;
 	map<int, int> renumbered_nodes;
 	const string filename = "small_graph.txt";
 	vector<int>* adjacency_list = new vector<int> [VERTEX_COUNT];
 
-	vector<int*> partitions;
+	vector<GraphSegment> segments;
 
 	priority_queue<Edge, vector<Edge>, CompareEdges> edges = read_graph(
 			filename, nodes, renumbered_nodes);
@@ -437,15 +448,23 @@ int main() {
 			adjacency_list[e.v2].push_back(e.v1);
 		}
 		cout << endl;
-		partitions.push_back(graphScope(adjacency_list));
+		segments.push_back(
+				GraphSegment(graphScope(adjacency_list), e.timestamp));
 		cout << endl;
 	}
 
-	cout << "final: [";
-	for (int i = 0; i < VERTEX_COUNT; i++) {
-		cout << partitions[0][i] << ", ";
+	for (vector<GraphSegment>::iterator iter = segments.begin();
+			iter != segments.end(); iter++) {
+		GraphSegment segment = *iter;
+		cout << "time " << segment.timestamp << ": [";
+		for (int i = 0; i < VERTEX_COUNT; i++) {
+			cout << segment.partition[i];
+			if (i < VERTEX_COUNT - 1) {
+				cout << ", ";
+			}
+		}
+		cout << "]" << endl;
 	}
-	cout << "]" << endl;
 
 	return 0;
 
