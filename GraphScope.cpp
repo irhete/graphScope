@@ -78,7 +78,8 @@ priority_queue<Edge, vector<Edge>, CompareEdges> read_graph(string filename) {
 	return edges;
 }
 
-double node_cost(int* partitioning, vector<vector<int> > partition_members, int node, int partition) {
+double node_cost(int* partitioning, vector<vector<int> > partition_members,
+		int node, int partition) {
 	const int k = partition_members.size();
 
 	int possible_edges_from_node = VERTEX_COUNT - 1;
@@ -174,8 +175,7 @@ double entropy(int* neighbors_in_partition, int k) {
 }
 
 double average_entropy(int* partitioning,
-		vector<vector<int> > partition_members,
-		int partition) {
+		vector<vector<int> > partition_members, int partition) {
 	double partition_entropy = 0;
 	for (vector<int>::iterator it = partition_members[partition].begin();
 			it != partition_members[partition].end(); it++) {
@@ -209,31 +209,31 @@ int find_partition_with_largest_entropy() {
 }
 
 /*
-vector<bitset<VERTEX_COUNT * VERTEX_COUNT> > create_bitset(
-		priority_queue<Edge, vector<Edge>, CompareEdges> edges) {
-	const int bitset_size = VERTEX_COUNT * VERTEX_COUNT;
-	vector<bitset<bitset_size> > segments;
-	bitset<bitset_size> segment;
-	while (!edges.empty()) {
-		Edge e = edges.top();
-		while (!edges.empty() && edges.top().timestamp == e.timestamp) {
-			e = edges.top();
-			edges.pop();
-			cout << e.v1 << ", " << e.v2 << ", " << e.timestamp << endl;
-			segment.set(VERTEX_COUNT * e.v1 + e.v2);
-			segment.set(VERTEX_COUNT * e.v2 + e.v1);
+ vector<bitset<VERTEX_COUNT * VERTEX_COUNT> > create_bitset(
+ priority_queue<Edge, vector<Edge>, CompareEdges> edges) {
+ const int bitset_size = VERTEX_COUNT * VERTEX_COUNT;
+ vector<bitset<bitset_size> > segments;
+ bitset<bitset_size> segment;
+ while (!edges.empty()) {
+ Edge e = edges.top();
+ while (!edges.empty() && edges.top().timestamp == e.timestamp) {
+ e = edges.top();
+ edges.pop();
+ cout << e.v1 << ", " << e.v2 << ", " << e.timestamp << endl;
+ segment.set(VERTEX_COUNT * e.v1 + e.v2);
+ segment.set(VERTEX_COUNT * e.v2 + e.v1);
 
-		}
-		cout << segment << endl;
-		segments.push_back(segment);
-	}
-	return segments;
-}
-*/
+ }
+ cout << segment << endl;
+ segments.push_back(segment);
+ }
+ return segments;
+ }
+ */
 
 void initialize_partition() {
 	partitioning = new int[VERTEX_COUNT];
-	partition_members = vector < vector < int > > (1);
+	partition_members = vector<vector<int> >(1);
 	for (int i = 0; i < VERTEX_COUNT; i++) {
 		partitioning[i] = 0;
 		partition_members[0].push_back(i);
@@ -247,8 +247,8 @@ double total_cost(vector<int>* adjacency_list, int* partitioning,
 		for (vector<int>::iterator it = partition_members[i].begin();
 				it != partition_members[i].end(); it++) {
 			int node = *it;
-			cost += node_cost(partitioning, partition_members,
-					node, partitioning[node]);
+			cost += node_cost(partitioning, partition_members, node,
+					partitioning[node]);
 		}
 
 	}
@@ -271,7 +271,8 @@ bool update_partitions() {
 			for (int partition = 0; partition < k; partition++) {
 				partitioning[node] = partition;
 				partition_members[partition].push_back(node);
-				double cost = node_cost(partitioning, partition_members, node, partition);
+				double cost = node_cost(partitioning, partition_members, node,
+						partition);
 				if (cost < best_cost) {
 					best_cost = cost;
 					best_partition = partition;
@@ -339,8 +340,7 @@ int* searchK() {
 	cout << "]" << endl;
 
 	// update partitions
-	changed = changed
-			| update_partitions();
+	changed = changed | update_partitions();
 	cout << "after update: [";
 	for (int j = 0; j < k; j++) {
 		cout << "(";
@@ -398,6 +398,7 @@ int* searchK() {
 		cout << ")";
 	}
 	cout << "]" << endl;
+
 	return partitioning;
 }
 
@@ -420,7 +421,8 @@ int main() {
 	const string filename = "extractedNetwork.o43237";
 
 	// read network and initialize partitioning (one big cluster)
-	priority_queue<Edge, vector<Edge>, CompareEdges> edges = read_graph(filename);
+	priority_queue<Edge, vector<Edge>, CompareEdges> edges = read_graph(
+			filename);
 	adjacency_list = new vector<int> [VERTEX_COUNT];
 	initialize_partition();
 	vector<GraphSegment> segments;
@@ -431,10 +433,20 @@ int main() {
 		while (!edges.empty() && edges.top().timestamp == e.timestamp) {
 			e = edges.top();
 			edges.pop();
+			cout << e.v1 << ", " << e.v2 << ", " << e.timestamp << endl;
 			adjacency_list[e.v1].push_back(e.v2);
 			adjacency_list[e.v2].push_back(e.v1);
 		}
-		segments.push_back(GraphSegment(graphScope(), e.timestamp));
+		int* segment = graphScope();
+		cout << "[";
+		for (int i = 0; i < VERTEX_COUNT; i++) {
+			cout << segment[i];
+			if (i < VERTEX_COUNT - 1) {
+				cout << ", ";
+			}
+		}
+		cout << "]" << endl;
+		segments.push_back(GraphSegment(segment, e.timestamp));
 		cout << endl;
 	}
 
@@ -444,7 +456,7 @@ int main() {
 		GraphSegment segment = *iter;
 		cout << "time " << segment.timestamp << ": [";
 		for (int i = 0; i < VERTEX_COUNT; i++) {
-			cout << segment.partition[i];
+			cout << (segment.partition)[i];
 			if (i < VERTEX_COUNT - 1) {
 				cout << ", ";
 			}
