@@ -10,6 +10,9 @@
 using namespace std;
 
 const int VERTEX_COUNT = 30;
+vector<int>* adjacency_list;
+int* partitioning;
+vector<vector<int> > partition_members;
 
 vector<string> &split(const string &s, char delim, vector<string> &elems) {
 	stringstream ss(s);
@@ -50,30 +53,16 @@ public:
 	}
 };
 
-priority_queue<Edge, vector<Edge>, CompareEdges> read_graph(string filename,
-		map<int, int> &nodes, map<int, int> &renumbered_nodes) {
+priority_queue<Edge, vector<Edge>, CompareEdges> read_graph(string filename) {
 	priority_queue<Edge, vector<Edge>, CompareEdges> edges;
 	string line;
 	ifstream myfile(filename.c_str());
 	if (myfile.is_open()) {
-		int node_index = 0;
 		while (getline(myfile, line)) {
 			vector<string> splitRow = split(line, ';');
 			int v1 = atoi(splitRow[0].c_str());
 			int v2 = atoi(splitRow[1].c_str());
 			int timestamp = atoi(splitRow[2].c_str());
-			map<int, int>::iterator iter = nodes.find(v1);
-//			if (iter == nodes.end()) {
-//				nodes[v1] = node_index;
-//				renumbered_nodes[node_index] = v1;
-//				node_index++;
-//			}
-//			iter = nodes.find(v2);
-//			if (iter == nodes.end()) {
-//				nodes[v2] = node_index;
-//				renumbered_nodes[node_index] = v2;
-//				node_index++;
-//			}
 			edges.push(Edge(v1, v2, timestamp));
 		}
 	}
@@ -81,8 +70,7 @@ priority_queue<Edge, vector<Edge>, CompareEdges> read_graph(string filename,
 	return edges;
 }
 
-double node_cost(int* partitioning, vector<vector<int> > partition_members,
-		vector<int>* adjacency, int node, int partition) {
+double node_cost(int* partitioning, vector<vector<int> > partition_members, int node, int partition) {
 	const int k = partition_members.size();
 
 	int possible_edges_from_node = VERTEX_COUNT - 1;
@@ -90,7 +78,7 @@ double node_cost(int* partitioning, vector<vector<int> > partition_members,
 	int possible_edges_from_partition = partition_size
 			* (VERTEX_COUNT - partition_size)
 			+ partition_size * (partition_size - 1);
-	int node_neighbors_count = adjacency[node].size();
+	int node_neighbors_count = adjacency_list[node].size();
 	int partition_neighbors_count = 0;
 	int partition_neighbors_in_same_partition = 0;
 
@@ -101,16 +89,16 @@ double node_cost(int* partitioning, vector<vector<int> > partition_members,
 		partition_neighbors_in_partition[i] = 0;
 	}
 
-	for (vector<int>::iterator it = adjacency[node].begin();
-			it != adjacency[node].end(); ++it) {
+	for (vector<int>::iterator it = adjacency_list[node].begin();
+			it != adjacency_list[node].end(); ++it) {
 		int neighbor = *it;
 		node_neighbors_in_partition[partitioning[neighbor]]++;
 	}
 
 	for (vector<int>::iterator it = partition_members[partition].begin();
 			it != partition_members[partition].end(); it++) {
-		for (vector<int>::iterator it2 = adjacency[*it].begin();
-				it2 != adjacency[*it].end(); it2++) {
+		for (vector<int>::iterator it2 = adjacency_list[*it].begin();
+				it2 != adjacency_list[*it].end(); it2++) {
 			int neighbor = *it2;
 			if (partitioning[neighbor] == partition) {
 				partition_neighbors_in_same_partition++;
@@ -178,7 +166,7 @@ double entropy(int* neighbors_in_partition, int k) {
 }
 
 double average_entropy(int* partitioning,
-		vector<vector<int> > partition_members, vector<int>* adjacency,
+		vector<vector<int> > partition_members,
 		int partition) {
 	double partition_entropy = 0;
 	for (vector<int>::iterator it = partition_members[partition].begin();
@@ -187,8 +175,8 @@ double average_entropy(int* partitioning,
 		for (unsigned int i = 0; i < partition_members.size(); i++) {
 			neighbors_in_partition[i] = 0;
 		}
-		for (vector<int>::iterator iter = adjacency[*it].begin();
-				iter != adjacency[*it].end(); iter++) {
+		for (vector<int>::iterator iter = adjacency_list[*it].begin();
+				iter != adjacency_list[*it].end(); iter++) {
 			neighbors_in_partition[partitioning[*iter]]++;
 		}
 		partition_entropy += entropy(neighbors_in_partition,
@@ -197,14 +185,13 @@ double average_entropy(int* partitioning,
 	return (partition_entropy / partition_members[partition].size());
 }
 
-int find_partition_with_largest_entropy(int* partitioning,
-		vector<vector<int> > partition_members, vector<int>* adjacency) {
+int find_partition_with_largest_entropy() {
 	double smallest_average_entropy = 100000000;
 	int best_partition = -1;
 	for (unsigned int partition = 0; partition < partition_members.size();
 			partition++) {
 		double partition_average_entropy = average_entropy(partitioning,
-				partition_members, adjacency, partition);
+				partition_members, partition);
 		if (partition_average_entropy < smallest_average_entropy) {
 			smallest_average_entropy = partition_average_entropy;
 			best_partition = partition;
@@ -234,8 +221,9 @@ vector<bitset<VERTEX_COUNT * VERTEX_COUNT> > create_bitset(
 	return segments;
 }
 
-void initialize_partition(int* partitioning,
-		vector<vector<int> > &partition_members) {
+void initialize_partition() {
+	partitioning = new int[VERTEX_COUNT];
+	partition_members = vector < vector < int > > (1);
 	for (int i = 0; i < VERTEX_COUNT; i++) {
 		partitioning[i] = 0;
 		partition_members[0].push_back(i);
@@ -249,7 +237,7 @@ double total_cost(vector<int>* adjacency_list, int* partitioning,
 		for (vector<int>::iterator it = partition_members[i].begin();
 				it != partition_members[i].end(); it++) {
 			int node = *it;
-			cost += node_cost(partitioning, partition_members, adjacency_list,
+			cost += node_cost(partitioning, partition_members,
 					node, partitioning[node]);
 		}
 
@@ -257,8 +245,8 @@ double total_cost(vector<int>* adjacency_list, int* partitioning,
 	return cost;
 }
 
-bool update_partitions(vector<int>* adjacency_list, int* partitioning,
-		vector<vector<int> > &partition_members, const int k) {
+bool update_partitions() {
+	const int k = partition_members.size();
 	bool changed = false;
 	for (int node = 0; node < VERTEX_COUNT; node++) {
 		if (partition_members[partitioning[node]].size() > 1) {
@@ -273,8 +261,7 @@ bool update_partitions(vector<int>* adjacency_list, int* partitioning,
 			for (int partition = 0; partition < k; partition++) {
 				partitioning[node] = partition;
 				partition_members[partition].push_back(node);
-				double cost = node_cost(partitioning, partition_members,
-						adjacency_list, node, partition);
+				double cost = node_cost(partitioning, partition_members, node, partition);
 				if (cost < best_cost) {
 					best_cost = cost;
 					best_partition = partition;
@@ -293,8 +280,7 @@ bool update_partitions(vector<int>* adjacency_list, int* partitioning,
 	return changed;
 }
 
-int* searchK(vector<int>* adjacency_list, int* partitioning,
-		vector<vector<int> > &partition_members) {
+int* searchK() {
 	// TODO: now only one iteration of split, update, merge. Need to make repeatable, but it stayed in infinite loop:
 	// merge merged into [(4, 6, 7, 5, )(1, 2, 3, )] and split split into [(4, 6, 7, )(1, 2, 3, )(5, )]
 	bool changed = true;
@@ -303,10 +289,9 @@ int* searchK(vector<int>* adjacency_list, int* partitioning,
 	changed = false;
 
 	// try to split
-	int partition = find_partition_with_largest_entropy(partitioning,
-			partition_members, adjacency_list);
+	int partition = find_partition_with_largest_entropy();
 	double current_average_entropy = average_entropy(partitioning,
-			partition_members, adjacency_list, partition);
+			partition_members, partition);
 	unsigned int position = 0;
 	while (position < partition_members[partition].size()) {
 		int node = partition_members[partition][position];
@@ -319,7 +304,7 @@ int* searchK(vector<int>* adjacency_list, int* partitioning,
 		new_partition_members[k].push_back(node);
 
 		double new_average_entropy = average_entropy(partitioning,
-				new_partition_members, adjacency_list, partition);
+				new_partition_members, partition);
 
 		if (current_average_entropy - new_average_entropy > 0.0001) {
 			k++;
@@ -345,8 +330,7 @@ int* searchK(vector<int>* adjacency_list, int* partitioning,
 
 	// update partitions
 	changed = changed
-			| update_partitions(adjacency_list, partitioning, partition_members,
-					k);
+			| update_partitions();
 	cout << "after update: [";
 	for (int j = 0; j < k; j++) {
 		cout << "(";
@@ -390,6 +374,7 @@ int* searchK(vector<int>* adjacency_list, int* partitioning,
 				k = k - 1;
 				changed = true;
 				current_total_cost = new_total_cost;
+				partition2--;
 			}
 		}
 	}
@@ -406,12 +391,8 @@ int* searchK(vector<int>* adjacency_list, int* partitioning,
 	return partitioning;
 }
 
-int* graphScope(vector<int>* adjacency_list) {
-	int k = 1;
-	int* partitioning = new int[VERTEX_COUNT];
-	vector<vector<int> > partition_members(k);
-	initialize_partition(partitioning, partition_members);
-	return searchK(adjacency_list, partitioning, partition_members);
+int* graphScope() {
+	return searchK();
 }
 
 int main() {
@@ -422,20 +403,19 @@ int main() {
 			<< "[(3, 5, 6, 4, )(0, 1, 2, )] shows that there are cluster 0 with nodes 3, 5, 6 and 4 and cluster 1 with nodes 0, 1 and 2"
 			<< endl;
 	cout
-			<< "[1, 1, 1, 0, 0, 0, 0, ] shows that nodes 0, 1 and 2 belong to the 1st cluster and 3, 4, 5 and 6 belong to 0th cluster"
+			<< "[1, 1, 1, 0, 0, 0, 0] shows that nodes 0, 1 and 2 belong to the 1st cluster and 3, 4, 5 and 6 belong to 0th cluster"
 			<< endl;
 	cout << endl;
 
-	map<int, int> nodes;
-	map<int, int> renumbered_nodes;
 	const string filename = "extractedNetwork.o43237";
-	vector<int>* adjacency_list = new vector<int> [VERTEX_COUNT];
+	adjacency_list = new vector<int> [VERTEX_COUNT];
 
+	// read network and initialize partitioning (one big cluster)
+	priority_queue<Edge, vector<Edge>, CompareEdges> edges = read_graph(filename);
+	initialize_partition();
 	vector<GraphSegment> segments;
 
-	priority_queue<Edge, vector<Edge>, CompareEdges> edges = read_graph(
-			filename, nodes, renumbered_nodes);
-
+	// add edges to adjacency list and find partitioning for each different timestep
 	while (!edges.empty()) {
 		Edge e = edges.top();
 		while (!edges.empty() && edges.top().timestamp == e.timestamp) {
@@ -444,11 +424,11 @@ int main() {
 			adjacency_list[e.v1].push_back(e.v2);
 			adjacency_list[e.v2].push_back(e.v1);
 		}
-		segments.push_back(
-				GraphSegment(graphScope(adjacency_list), e.timestamp));
+		segments.push_back(GraphSegment(graphScope(), e.timestamp));
 		cout << endl;
 	}
 
+	// print partitionings for each timestamp
 	for (vector<GraphSegment>::iterator iter = segments.begin();
 			iter != segments.end(); iter++) {
 		GraphSegment segment = *iter;
