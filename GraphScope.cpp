@@ -9,7 +9,7 @@
 #include <cmath>
 using namespace std;
 
-const int VERTEX_COUNT = 30;
+int VERTEX_COUNT;
 vector<int>* adjacency_list;
 int* partitioning;
 vector<vector<int> > partition_members;
@@ -55,6 +55,7 @@ public:
 
 priority_queue<Edge, vector<Edge>, CompareEdges> read_graph(string filename) {
 	priority_queue<Edge, vector<Edge>, CompareEdges> edges;
+	int max_node_index = 0;
 	string line;
 	ifstream myfile(filename.c_str());
 	if (myfile.is_open()) {
@@ -64,9 +65,16 @@ priority_queue<Edge, vector<Edge>, CompareEdges> read_graph(string filename) {
 			int v2 = atoi(splitRow[1].c_str());
 			int timestamp = atoi(splitRow[2].c_str());
 			edges.push(Edge(v1, v2, timestamp));
+			if (v1 > max_node_index) {
+				max_node_index = v1;
+			}
+			if (v2 > max_node_index) {
+				max_node_index = v2;
+			}
 		}
 	}
 	myfile.close();
+	VERTEX_COUNT = max_node_index + 1;
 	return edges;
 }
 
@@ -200,6 +208,7 @@ int find_partition_with_largest_entropy() {
 	return best_partition;
 }
 
+/*
 vector<bitset<VERTEX_COUNT * VERTEX_COUNT> > create_bitset(
 		priority_queue<Edge, vector<Edge>, CompareEdges> edges) {
 	const int bitset_size = VERTEX_COUNT * VERTEX_COUNT;
@@ -220,6 +229,7 @@ vector<bitset<VERTEX_COUNT * VERTEX_COUNT> > create_bitset(
 	}
 	return segments;
 }
+*/
 
 void initialize_partition() {
 	partitioning = new int[VERTEX_COUNT];
@@ -408,10 +418,10 @@ int main() {
 	cout << endl;
 
 	const string filename = "extractedNetwork.o43237";
-	adjacency_list = new vector<int> [VERTEX_COUNT];
 
 	// read network and initialize partitioning (one big cluster)
 	priority_queue<Edge, vector<Edge>, CompareEdges> edges = read_graph(filename);
+	adjacency_list = new vector<int> [VERTEX_COUNT];
 	initialize_partition();
 	vector<GraphSegment> segments;
 
