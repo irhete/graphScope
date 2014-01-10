@@ -418,8 +418,8 @@ int main() {
 			<< endl;
 	cout << endl;
 
-	const string filename = "extractedNetwork.o43237";
-
+	//const string filename = "extractedNetwork.o43237";
+    const string filename = "tmp.txt";
 	// read network and initialize partitioning (one big cluster)
 	priority_queue<Edge, vector<Edge>, CompareEdges> edges = read_graph(
 			filename);
