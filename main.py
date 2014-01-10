@@ -34,13 +34,10 @@ def entropy(arr):
     totalInstances = sum(arr)
     for instance in arr:
         if instance > 0:
-            print instance
             entropy += (float(instance) / totalInstances) * log(float(instance) / totalInstances, 2)
-    
     return -entropy
 
 def crossEntropy(arrP, arrQ):
-    print arrP, arrQ
     entropy = 0
     totalInstancesP = sum(arrP)
     totalInstancesQ = sum(arrQ)
@@ -49,8 +46,19 @@ def crossEntropy(arrP, arrQ):
             entropy += (float(arrP[i]) / totalInstancesP) * log(float(arrQ[i]) / totalInstancesQ, 2)
     return -entropy
 
-def totalCost(source, destination):
+def totalCost(nodesInPartS, nodesInPartD, part):
     # source and destination are arrays of frequencies for partitions
+    partitionToPartition = np.zeros(shape=(len(nodesInPartS), len(nodesInPartD)))
+    for node in range(sourceNodesCount):
+        for neighbor in g.neighbors(sourceNodes[node]):
+            partitionToPartition[part[sourceNodes[node]]][part[neighbor]] += 1
+    possibleEdgesFromPartitions = np.array([len(elem) for elem in nodesInPartS]) * destNodesCount
+    existingEdgesFromPartitions = np.apply_along_axis( sum, axis=1, arr=partitionToPartition)
+    complementaryColumnForPartitions = possibleEdgesFromPartitions - existingEdgesFromPartitions
+    partitionToPartition = np.append(partitionToPartition, np.transpose(np.matrix(complementaryColumnForPartitions)), axis = 1)
+
+    source = [len(elem) for elem in nodesInPartS]
+    destination = [len(elem) for elem in nodesInPartD]
     m = sum(source)
     n = sum(destination)
     partitionEncodingCost = m * entropy(source) + n * entropy(destination)
@@ -61,11 +69,9 @@ def totalCost(source, destination):
         for j in range(l):
             gamma = source[i] * destination[j]
             arr = []
-            arr.append(edgeMatrix[i][j])
+            arr.append(partitionToPartition[i].tolist()[0][j])
             arr.append(gamma - arr[0])
             graphEncodingCost += gamma * entropy(arr)
-    print partitionEncodingCost
-    print graphEncodingCost
     return partitionEncodingCost + graphEncodingCost
 
 def averageEntropy(nodesInPartS, nodesInPartD, part, partIndex):
@@ -129,36 +135,64 @@ def searchKL(nodesInPartS, nodesInPartD, part):
     changed = True
     while (changed):
         changed = False
-##        merged = True
-##        while(merged):
-##            merged = False
-##            currentTotalCost = totalCost()
-##            pair = findPairToMerge()
-##            if newTotalCost < currentTotalCost:
-##                merge(pair)
-##                merged = True
-
-        encodingCostDecreased = True
-        while(encodingCostDecreased):
-            encodingCostDecreased = False
-            partIndex = findPartitionToSplit(nodesInPartS, nodesInPartD, part)
-            if len(nodesInPartS[partIndex]) > 1:
-                currentAverageEntropy = averageEntropy(nodesInPartS, nodesInPartD, part, partIndex)
-                print "current average entropy", currentAverageEntropy
-                for s in nodesInPartS[partIndex]:
+        merged = True
+        while(merged):
+            merged = False
+            currentTotalCost = totalCost(nodesInPartS, nodesInPartD, part)
+            print part
+            print nodesInPartS
+            print currentTotalCost
+            k = len(nodesInPartS)
+            i = 0
+            while i < k-1:
+                j = i+1
+                while j < k:
+                    print "i=", i, "j=", j, nodesInPartS
                     newNodesInPartS = nodesInPartS[:]
-                    newNodesInPartS[partIndex].remove(s)
-                    newNodesInPartS.append([s])
+                    newNodesInPartS[i].extend(newNodesInPartS[j])
+                    del newNodesInPartS[j]
                     newPart = part[:]
-                    newPart[s] = len(nodesInPartS)
-                    newAverageEntropy = averageEntropy(newNodesInPartS, nodesInPartD, newPart, partIndex)
-                    print "new average entropy", newAverageEntropy
-                    if newAverageEntropy < currentAverageEntropy:
+                    print "i=", i, "j=", j, nodesInPartS
+                    for sourceNode in sourceNodes:
+                        if newPart[sourceNode] == j:
+                            newPart[sourceNode] = i
+                        elif newPart[sourceNode] > j:
+                            newPart[sourceNode] -= 1
+                    newTotalCost = totalCost(newNodesInPartS, nodesInPartD, newPart)
+                    if newTotalCost < currentTotalCost:
+                        merged = True
                         nodesInPartS = newNodesInPartS
-                        currentAverageEntropy = newAverageEntropy
                         part = newPart
-                print nodesInPartS
-                reGroup(nodesInPartS, nodesInPartD, part)
+                        currentTotalCost = newTotalCost
+                        print i, j, newTotalCost
+                        print nodesInPartS
+                        k -= 1
+                    else:
+                        j += 1
+                        print "i=", i, "j=", j, nodesInPartS
+                    i += 1
+
+##        encodingCostDecreased = True
+##        while(encodingCostDecreased):
+##            encodingCostDecreased = False
+##            partIndex = findPartitionToSplit(nodesInPartS, nodesInPartD, part)
+##            if len(nodesInPartS[partIndex]) > 1:
+##                currentAverageEntropy = averageEntropy(nodesInPartS, nodesInPartD, part, partIndex)
+##                print "current average entropy", currentAverageEntropy
+##                for s in nodesInPartS[partIndex]:
+##                    newNodesInPartS = nodesInPartS[:]
+##                    newNodesInPartS[partIndex].remove(s)
+##                    newNodesInPartS.append([s])
+##                    newPart = part[:]
+##                    newPart[s] = len(nodesInPartS)
+##                    newAverageEntropy = averageEntropy(newNodesInPartS, nodesInPartD, newPart, partIndex)
+##                    print "new average entropy", newAverageEntropy
+##                    if newAverageEntropy < currentAverageEntropy:
+##                        nodesInPartS = newNodesInPartS
+##                        currentAverageEntropy = newAverageEntropy
+##                        part = newPart
+##                print nodesInPartS
+##                reGroup(nodesInPartS, nodesInPartD, part)
             
 
 
@@ -194,7 +228,7 @@ part = [1,0,2,0,0,1,1]
 
 ##edgeMatrix = [[2,0], [0,3]]
 
-reGroup(nodesInPartS, nodesInPartD, part)
+searchKL(nodesInPartS, nodesInPartD, part)
 
 
 
