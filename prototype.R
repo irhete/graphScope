@@ -34,3 +34,6 @@ pimage(adj, k, main = "Reordered", colorkey=TRUE)
 
 get_order(k,1)
 get_order(k,2)
+
+
+entropy(c(1,3))

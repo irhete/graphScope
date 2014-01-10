@@ -54,5 +54,13 @@ freqs = apply(partitioning,1,table)
 partitioning_entropy = sum(apply(freqs,2,entropy, unit = "log2"))
 
 
-  
-  
+4*entropy(c(2,2), unit = "log2")+3*entropy(c(1,2), unit = "log2")
+
+2*1*entropy(c(2,0), unit = "log2")+2*2*entropy(c(0,4), unit = "log2")+2*entropy(c(0,2), unit ="log2")+4*entropy(c(3,1), unit = "log2")
+
+
+(1/4)*log(7/8,base = 2)+(3/4)*log(1/8, base = 2)
+
+6*((3/4)*log(7/8, base = 2)+(1/4)*log(1/8, base =2))
+
+6*((3/4)*log(3/4, base = 2)+(1/4)*log(1/4, base =2))
