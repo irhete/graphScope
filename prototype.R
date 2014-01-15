@@ -51,9 +51,9 @@ get_order(k,2)
 edgelist <- cbind.data.frame(source_nodes = sample(0:(m-1), edges, replace = T), destin_nodes = sample((m):(m+n-1), edges, replace=T))
 edgelist$timestamp = 1
 edgelist = edgelist[-which(duplicated(edgelist)==TRUE),]
-set.seed(round(runif(1, min=2, max = 200),0))
-##########################
 
+##########################
+set.seed(round(runif(1, min=2, max = 200),0))
 a = 0:999
 b = 1000:1999
 groups = 4
@@ -70,14 +70,14 @@ edgelist = cbind.data.frame(edgelist,1)
 
 #introducing noise
 edges_total = nrow(edgelist)
-prcnt_noise = 0.05
+prcnt_noise = 0.02
 #delete 0.5% of edges
 deletions = round((prcnt_noise/2)*edges_total,0)
 #set.seed(6576)
 idx_to_delete = sample(nrow(edgelist), deletions)
 edgelist = edgelist[-idx_to_delete,]
 
-#add 0.5%
+#add noise
 #random sample of existing source nodes
 additions = round((prcnt_noise/2)*edges_total,0)
 source_add = sample(a, additions, replace = T)
@@ -85,6 +85,8 @@ destination_add = sample(b, additions, replace = T)
 added_edges = as.data.frame(cbind(source_add,destination_add,1))
 names(added_edges) = names(edgelist)
 edgelist = rbind.data.frame(edgelist,added_edges)
+
+edgelist = edgelist[-which(duplicated(edgelist)==TRUE),]
 
 write.table(edgelist, "C:/Users/v-anleon/Desktop/Tartu_University/Algorithmics2013/project_bins/data/edgelist_noise_2pct.txt", col.names= FALSE, row.names = FALSE, sep =';')
 
