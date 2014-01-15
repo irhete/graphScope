@@ -1,13 +1,31 @@
 from math import log
 import numpy as np
+from igraph import *
 
-# def graphScope(segment, encodingCost0, newGraph):
-#     encodingCostUnion
-#     encodingCostNewGraph
-#     if encodingCostUnion - encodingCost0 < encodingCostNewGraph:
-#         segment.append(newGraph)
-#         searchKL(segment)
-#     else:
+class GraphSegment:
+    def __init__(self, g, nodesInPartS, nodesInPartG, part):
+        self.g = g
+        self.nodesInPartS = nodesInPartS
+        self.nodesInPartG = nodesInPartG
+        self.part = part
+
+def graphScope(segment, newGraph):
+    encodingCostSegment = totalCostForSegment(segment)
+    
+    resultNewGraph = partitionGraph(newGraph, 2)
+    newSegment = GraphSegment(newGraph, resultNewGraph[0], resultNewGraph[1], resultNewGraph[2])
+    encodingCostNewGraph = totalCostForSegment(newSegment)
+    
+    unionGraph = Graph.Bipartite(segment.g.vs["type"], segment.g.es, directed=False)
+    unionGraph.add_edges(newGraph.g.es)
+    resultUnion = partitionGraph(unionGraph, 2)
+    unionSegment = GraphSegment(unionGraph, resultUnion[0], resultUnion[1], resultUnion[2])
+    encodingCostUnion = totalCostForSegment(unionSegment)
+    
+    if encodingCostUnion - encodingCostSegment < encodingCostNewGraph:
+        return [unionSegment]
+    else:
+        return [segment, newSegment]
 
 def entropy(arr):
     entropy = 0
@@ -49,6 +67,10 @@ def totalCost(g, nodesInPartS, nodesInPartD, part, sourceNodes):
             arr.append(gamma - arr[0])
             graphEncodingCost += gamma * entropy(arr)
     return partitionEncodingCost + graphEncodingCost
+
+def totalCostForSegment(segment):
+    sourceNodes = [i for i, x in enumerate(segment.g.vs["type"]) if x == False]
+    return totalCost(segment.g, segment.nodesInPartS, segment.nodesInPartD, segment.part, sourceNodes)
 
 def averageEntropy(g, nodesInPartS, nodesInPartD, part, partIndex, sourceNodes):
     partEntropy = 0
@@ -115,69 +137,58 @@ def reGroup(g, nodesInPartS, nodesInPartD, part, sourceNodes):
     
 
 def searchKL(g, nodesInPartS, nodesInPartD, part, sourceNodes, verbose = False):
-    changed = True
-    while (changed):
-        changed = False
-
-        encodingCostDecreased = True
-        while(encodingCostDecreased):
-            encodingCostDecreased = False
-            partIndex = findPartitionToSplit(g, nodesInPartS, nodesInPartD, part, sourceNodes)
-            if len(nodesInPartS[partIndex]) > 1:
-                currentAverageEntropy = averageEntropy(g, nodesInPartS, nodesInPartD, part, partIndex, sourceNodes)
-#                 print "current average entropy", currentAverageEntropy
-                for s in nodesInPartS[partIndex]:
-                    newNodesInPartS = nodesInPartS[:]
-                    newNodesInPartS[partIndex].remove(s)
-                    newNodesInPartS.append([s])
-                    newPart = part[:]
-                    newPart[s] = len(nodesInPartS)
-                    newAverageEntropy = averageEntropy(g, newNodesInPartS, nodesInPartD, newPart, partIndex, sourceNodes)
-#                     print "new average entropy", newAverageEntropy
-                    if newAverageEntropy < currentAverageEntropy:
-                        nodesInPartS = newNodesInPartS
-                        currentAverageEntropy = newAverageEntropy
-                        part = newPart
-                if (verbose):
-                    print "after split:", nodesInPartS
-                reGroup(g, nodesInPartS, nodesInPartD, part, sourceNodes)
-                if (verbose):
-                    print "after update:", nodesInPartS
-                
-        merged = True
-        while(merged):
-            merged = False
-            currentTotalCost = totalCost(g, nodesInPartS, nodesInPartD, part, sourceNodes)
-#             print "current total cost:", currentTotalCost
-            k = len(nodesInPartS)
-            i = 0
-            while i < k-1:
-                j = i+1
-                while j < k:
-                    newNodesInPartS = []
-                    for partition in range(len(nodesInPartS)):
-                        newNodesInPartS.append(nodesInPartS[partition][:])
-                    newNodesInPartS[i].extend(newNodesInPartS[j])
-                    del newNodesInPartS[j]
-                    newPart = part[:]
-                    for sourceNode in sourceNodes:
-                        if newPart[sourceNode] == j:
-                            newPart[sourceNode] = i
-                        elif newPart[sourceNode] > j:
-                            newPart[sourceNode] -= 1
-                    newTotalCost = totalCost(g, newNodesInPartS, nodesInPartD, newPart, sourceNodes)
-#                     print "new total cost:", newTotalCost, "source:", nodesInPartS
-                    if newTotalCost <= currentTotalCost:
-                        merged = True
-                        nodesInPartS = newNodesInPartS
-                        part = newPart
-                        currentTotalCost = newTotalCost
-                        k -= 1
-                    else:
-                        j += 1
-                i += 1
+    partIndex = findPartitionToSplit(g, nodesInPartS, nodesInPartD, part, sourceNodes)
+    if len(nodesInPartS[partIndex]) > 1:
+        currentAverageEntropy = averageEntropy(g, nodesInPartS, nodesInPartD, part, partIndex, sourceNodes)
+#       print "current average entropy", currentAverageEntropy
+        for s in nodesInPartS[partIndex]:
+            newNodesInPartS = nodesInPartS[:]
+            newNodesInPartS[partIndex].remove(s)
+            newNodesInPartS.append([s])
+            newPart = part[:]
+            newPart[s] = len(nodesInPartS)
+            newAverageEntropy = averageEntropy(g, newNodesInPartS, nodesInPartD, newPart, partIndex, sourceNodes)
+#           print "new average entropy", newAverageEntropy
+            if newAverageEntropy < currentAverageEntropy:
+                nodesInPartS = newNodesInPartS
+                currentAverageEntropy = newAverageEntropy
+                part = newPart
         if (verbose):
-            print "after merge:", nodesInPartS
+            print "after split:", nodesInPartS
+        reGroup(g, nodesInPartS, nodesInPartD, part, sourceNodes)
+        if (verbose):
+            print "after update:", nodesInPartS
+                
+    currentTotalCost = totalCost(g, nodesInPartS, nodesInPartD, part, sourceNodes)
+#   print "current total cost:", currentTotalCost
+    k = len(nodesInPartS)
+    i = 0
+    while i < k-1:
+        j = i+1
+        while j < k:
+            newNodesInPartS = []
+            for partition in range(len(nodesInPartS)):
+                newNodesInPartS.append(nodesInPartS[partition][:])
+            newNodesInPartS[i].extend(newNodesInPartS[j])
+            del newNodesInPartS[j]
+            newPart = part[:]
+            for sourceNode in sourceNodes:
+                if newPart[sourceNode] == j:
+                    newPart[sourceNode] = i
+                elif newPart[sourceNode] > j:
+                    newPart[sourceNode] -= 1
+            newTotalCost = totalCost(g, newNodesInPartS, nodesInPartD, newPart, sourceNodes)
+#           print "new total cost:", newTotalCost, "source:", nodesInPartS
+            if newTotalCost <= currentTotalCost:
+                nodesInPartS = newNodesInPartS
+                part = newPart
+                currentTotalCost = newTotalCost
+                k -= 1
+            else:
+                j += 1
+        i += 1
+    if (verbose):
+        print "after merge:", nodesInPartS
     return [nodesInPartS, part]
 
 def createPartitionToPartition(g, nodesInPartS, nodesInPartD, part, sourceNodes):
@@ -215,8 +226,9 @@ def partitionGraph(g, iterations):
     nodesInPartD = initialized[1]
     
     for i in range(iterations):
+        print "iteration", i, ":\n"
         # searchKL for source nodes
-        result = searchKL(g, nodesInPartS, nodesInPartD, part, sourceNodes)
+        result = searchKL(g, nodesInPartS, nodesInPartD, part, sourceNodes, True)
         nodesInPartS = result[0]
         part = result[1]
         if (i == 0):
@@ -225,10 +237,10 @@ def partitionGraph(g, iterations):
                 part[destNode] = 0
       
         # searchKL for dest nodes    
-        result = searchKL(g, nodesInPartD, nodesInPartS, part, destNodes)
+        result = searchKL(g, nodesInPartD, nodesInPartS, part, destNodes, True)
         nodesInPartD = result[0]
         part = result[1]
-        print "iteration", i, ":\n source:", nodesInPartS, "\n dest:", nodesInPartD, "\n partitioning", part
+        print "source:", nodesInPartS, "\n dest:", nodesInPartD, "\n partitioning", part
     return [nodesInPartS, nodesInPartD, part]
 
 # def segmentGraphToPartitions(segment, newGraph):

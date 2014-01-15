@@ -9,6 +9,7 @@ class Edge:
         self.v1 = v1
         self.v2 = v2
         self.timestamp = timestamp
+        
 
 def readEdges(fileName):
     f = open(fileName, 'r')
