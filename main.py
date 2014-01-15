@@ -258,7 +258,7 @@ def writeInitialGraphToFile(adj, fileName):
     adj2 = [[adj[row][col] for col in destNodes] for row in sourceNodes]
     writeMatrixToFile(adj2, fileName)
 
-def writeMatrixToPnm(adj, fileName1, fileName2, sourceNodes, destNodes):
+def writeMatrixToPnms(adj, fileName1, fileName2, sourceNodes, destNodes):
     adj2 = [[adj[row][col] for col in destNodes] for row in sourceNodes]
     sourceOrdering = findMatrixReordering(nodesInPartS)
     destOrdering = findMatrixReordering(nodesInPartD)
@@ -280,7 +280,7 @@ def writeMatrixToPnm(adj, fileName1, fileName2, sourceNodes, destNodes):
 # start!
 types = {}
 edges = PriorityQueue()
-readEdges("edgelist (2).txt")
+readEdges("tmp.txt")
 edgesForTimestamp = []
 timestamp = edges.queue[0].timestamp
 while(not edges.empty() and edges.queue[0].timestamp == timestamp):
@@ -337,18 +337,10 @@ for i in range(3):
     print "dest final: \n source:", nodesInPartS, "\n dest:", nodesInPartD, "\n partitioning", part
 
 
-adj = g.get_adjacency()
-writeMatrixToPnm(adj, 'initial_matrix.pnm', 'partitioned_matrix.pnm', sourceNodes, destNodes);
-# writeInitialGraphToFile(adj, 'initialGraph.txt')
-# writePartitionedGraphToFile(nodesInPartS, nodesInPartD, part, adj, 'graph.txt')
-
-# print findMatrixReordering(nodesInPartS)
-# print findMatrixReordering(nodesInPartD)
-
-    #print matrix
-#     adj = g.get_adjacency()
-#     writeMatrixToFile(adj, 'graph.txt')
-
+# adj = g.get_adjacency()
+# writeMatrixToPnms(adj, 'initial_matrix.pnm', 'partitioned_matrix.pnm', sourceNodes, destNodes);
+# writeInitialGraphToFile(adj, 'initial_graph.txt')
+# writePartitionedGraphToFile(nodesInPartS, nodesInPartD, part, adj, 'partitioned_graph.txt')
 
 
 # layout = g.layout("kk")
