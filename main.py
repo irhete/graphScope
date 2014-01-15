@@ -3,6 +3,7 @@ from Queue import PriorityQueue
 from sets import Set
 from math import log
 import numpy as np
+from string import *
 from networkx.generators.bipartite import bipartite_random_graph
 
 
@@ -212,35 +213,74 @@ def createPartitionToPartition(nodesInPartS, nodesInPartD, part, sourceNodes):
     partitionToPartition = np.append(partitionToPartition, np.transpose(np.matrix(complementaryColumnForPartitions)), axis = 1)
     return partitionToPartition
 
-def printMatrixReordering():
-    partitionToPartition = createPartitionToPartition(nodesInPartS, nodesInPartD, part, sourceNodes)
-    print partitionToPartition
-    correspondingPartitions = []
-    for sourcePartition in partitionToPartition:
-        sourcePartitionDistr = sourcePartition.tolist()[0]
-        correspondingPartitions.append(sourcePartitionDistr.index(max(sourcePartitionDistr[:-1])))
-    sourceOrdering = []
-    destOrdering = []
-    usedDestPartitions = Set()
-    for partitionIndex in range(len(nodesInPartS)):
-        partition = nodesInPartS[partitionIndex]
+def findMatrixReordering(nodesInPart):
+    ordering = []
+    for partition in nodesInPart:
         for node in partition:
-            sourceOrdering.append(node)
-        if correspondingPartitions[partitionIndex] not in usedDestPartitions:
-            for node in nodesInPartD[correspondingPartitions[partitionIndex]]:
-                destOrdering.append(node)
-                usedDestPartitions.add(correspondingPartitions[partitionIndex])
-    for destPartitionIndex in range(len(nodesInPartD)):
-        if destPartitionIndex not in usedDestPartitions:
-            for node in nodesInPartD[destPartitionIndex]:
-                destOrdering.append(node)
-    print sourceOrdering
-    print destOrdering
+            ordering.append(node)
+    ordering = np.array(ordering) - min(ordering)
+    return ordering
+
+def writeMatrixToFile(adj, fileName, newLines = False):
+    f = open(fileName,'a')
+    for row in adj:
+        f.write("".join(str(x) for x in row))
+        if (newLines):
+            f.write("\n")
+    if (not newLines):
+        f.write("\n")
+    f.close()
+    
+def writeArrayToFile(arr, fileName):
+    f = open(fileName,'a')
+    f.write("".join(str(x) for x in arr))
+    f.write("\n")
+    f.close()
+
+def writeNumbersToFile(numbers, fileName):
+    f = open(fileName, 'w')
+    for number in numbers:
+        f.write(str(number) + "\n")
+    f.close()
+
+def writePartitionedGraphToFile(nodesInPartS, nodesInPartD, part, adj, fileName):
+    writeNumbersToFile([sourceNodesCount, destNodesCount, len(nodesInPartS), len(nodesInPartD)], fileName)
+    writeArrayToFile(part, fileName)
+    for i in range(len(nodesInPartS)):
+        nodesInPartS[i].sort()
+        for j in range(len(nodesInPartD)):
+            nodesInPartD[j].sort()
+            adj2 = [[adj[row][col] for col in nodesInPartD[j]] for row in nodesInPartS[i]]
+            writeMatrixToFile(adj2, fileName)
+            
+def writeInitialGraphToFile(adj, fileName):
+    writeNumbersToFile([sourceNodesCount, destNodesCount], fileName)
+    adj2 = [[adj[row][col] for col in destNodes] for row in sourceNodes]
+    writeMatrixToFile(adj2, fileName)
+
+def writeMatrixToPnm(adj, fileName1, fileName2, sourceNodes, destNodes):
+    adj2 = [[adj[row][col] for col in destNodes] for row in sourceNodes]
+    sourceOrdering = findMatrixReordering(nodesInPartS)
+    destOrdering = findMatrixReordering(nodesInPartD)
+    adj3 = [[adj2[row][col] for col in destOrdering] for row in sourceOrdering]
+
+    f = open(fileName1,'w')
+    f.write("P1\n")
+    f.write(str(len(sourceNodes)) + " " + str(len(destNodes)) + "\n")
+    f.close()
+    writeMatrixToFile(adj2, fileName1, True)
+    
+    f = open(fileName2,'w')
+    f.write("P1\n")
+    f.write(str(len(sourceNodes)) + " " + str(len(destNodes)) + "\n")
+    f.close()
+    writeMatrixToFile(adj3, fileName2, True)
+    
 
 # start!
 types = {}
 edges = PriorityQueue()
-readEdges("tmp.txt")
+readEdges("edgelist (2).txt")
 edgesForTimestamp = []
 timestamp = edges.queue[0].timestamp
 while(not edges.empty() and edges.queue[0].timestamp == timestamp):
@@ -279,7 +319,7 @@ for destNode in destNodes:
  
 # searchKL for source nodes
 
-for i in range(4):
+for i in range(3):
     result = searchKL(nodesInPartS, nodesInPartD, part, sourceNodes)
     nodesInPartS = result[0]
     part = result[1]
@@ -289,16 +329,25 @@ for i in range(4):
             part[destNode] = 0
     print "iteration:", i
     print "source final: \n source:", nodesInPartS, "\n dest:", nodesInPartD, "\n partitioning", part
- 
+  
     # searchKL for dest nodes    
     result = searchKL(nodesInPartD, nodesInPartS, part, destNodes)
     nodesInPartD = result[0]
     part = result[1]
     print "dest final: \n source:", nodesInPartS, "\n dest:", nodesInPartD, "\n partitioning", part
-    
-    printMatrixReordering()
 
 
+adj = g.get_adjacency()
+writeMatrixToPnm(adj, 'initial_matrix.pnm', 'partitioned_matrix.pnm', sourceNodes, destNodes);
+# writeInitialGraphToFile(adj, 'initialGraph.txt')
+# writePartitionedGraphToFile(nodesInPartS, nodesInPartD, part, adj, 'graph.txt')
+
+# print findMatrixReordering(nodesInPartS)
+# print findMatrixReordering(nodesInPartD)
+
+    #print matrix
+#     adj = g.get_adjacency()
+#     writeMatrixToFile(adj, 'graph.txt')
 
 
 
