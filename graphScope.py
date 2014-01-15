@@ -192,3 +192,46 @@ def createPartitionToPartition(g, nodesInPartS, nodesInPartD, part, sourceNodes)
     partitionToPartition = np.append(partitionToPartition, np.transpose(np.matrix(complementaryColumnForPartitions)), axis = 1)
     return partitionToPartition
 
+def initializeDestPartition(destNodes, part):
+    destNodePartition = 0
+    nodesInPartD = []
+    for destNode in destNodes:
+        nodesInPartD.append([destNode])
+        part[destNode] = destNodePartition
+        destNodePartition += 1
+    return [part, nodesInPartD]
+
+def partitionGraph(g, iterations):
+    totalNodes = len(g.vs)
+    part = [0] * totalNodes
+    nodesInPartS = []
+    sourceNodes = [i for i, x in enumerate(g.vs["type"]) if x == False]
+    destNodes = [i for i, x in enumerate(g.vs["type"]) if x == True]
+    nodesInPartS.append(sourceNodes[:])
+     
+    #initialize destPartition so that each node is in its own partition
+    initialized = initializeDestPartition(destNodes, part)
+    part = initialized[0]
+    nodesInPartD = initialized[1]
+    
+    for i in range(iterations):
+        # searchKL for source nodes
+        result = searchKL(g, nodesInPartS, nodesInPartD, part, sourceNodes)
+        nodesInPartS = result[0]
+        part = result[1]
+        if (i == 0):
+            nodesInPartD = [destNodes[:]]
+            for destNode in destNodes:
+                part[destNode] = 0
+      
+        # searchKL for dest nodes    
+        result = searchKL(g, nodesInPartD, nodesInPartS, part, destNodes)
+        nodesInPartD = result[0]
+        part = result[1]
+        print "iteration", i, ":\n source:", nodesInPartS, "\n dest:", nodesInPartD, "\n partitioning", part
+    return [nodesInPartS, nodesInPartD, part]
+
+# def segmentGraphToPartitions(segment, newGraph):
+#     
+    
+

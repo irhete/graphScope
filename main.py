@@ -22,71 +22,41 @@ def readEdges(fileName):
 
 
 
-
 # start!
 types = {}
 edges = PriorityQueue()
-readEdges("edgelists/tmp.txt")
-edgesForTimestamp = []
-timestamp = edges.queue[0].timestamp
-while(not edges.empty() and edges.queue[0].timestamp == timestamp):
-    edge = edges.get()
-    edgesForTimestamp.append((edge.v1, edge.v2))
- 
-g = Graph.Bipartite(types.values(), edgesForTimestamp, directed=False)
-g.vs["label"] = range(len(types))
+readEdges("edgelists/edgelist_noise_1pct.txt")
+graphSegments = []
+
+while(not edges.empty()):
+    edgesForTimestamp = []
+    timestamp = edges.queue[0].timestamp
+    while(not edges.empty() and edges.queue[0].timestamp == timestamp):
+        edge = edges.get()
+        edgesForTimestamp.append((edge.v1, edge.v2))
+     
+    g = Graph.Bipartite(types.values(), edgesForTimestamp, directed=False)
+    g.vs["label"] = range(len(types))
+    graphSegments.append(g)
 
 
-
-totalEdges = len(g.es)
-totalNodes = len(g.vs)
-destNodesCount = sum(g.vs["type"]*1)
-sourceNodesCount = totalNodes - destNodesCount
- 
- 
-part = [0] * totalNodes
-nodesInPartS = []
-nodesInPartD = []
-sourceNodes = [i for i, x in enumerate(g.vs["type"]) if x == False]
-destNodes = [i for i, x in enumerate(g.vs["type"]) if x == True]
-nodesInPartS.append(sourceNodes[:])
-nodesInPartD.append(destNodes[:])
-part = [0] * totalNodes
-# nodesInPartS = [[1,3],[0],[2]]
- 
-#initialize destPartition so that each node is in its own partition
-destNodePartition = 0
-nodesInPartD = []
-for destNode in destNodes:
-    nodesInPartD.append([destNode])
-    part[destNode] = destNodePartition
-    destNodePartition += 1
- 
- 
-# searchKL for source nodes
-
-for i in range(3):
-    result = searchKL(g, nodesInPartS, nodesInPartD, part, sourceNodes)
+timestamp = 1
+for g in graphSegments:
+    print "timestamp", timestamp, "\n"
+    result = partitionGraph(g, 2)
     nodesInPartS = result[0]
-    part = result[1]
-    if (i == 0):
-        nodesInPartD = [destNodes[:]]
-        for destNode in destNodes:
-            part[destNode] = 0
-    print "iteration:", i
-    print "source final: \n source:", nodesInPartS, "\n dest:", nodesInPartD, "\n partitioning", part
-  
-    # searchKL for dest nodes    
-    result = searchKL(g, nodesInPartD, nodesInPartS, part, destNodes)
-    nodesInPartD = result[0]
-    part = result[1]
-    print "dest final: \n source:", nodesInPartS, "\n dest:", nodesInPartD, "\n partitioning", part
+    nodesInPartD = result[1]
+    part = result[2]
+    print "\n"
+    timestamp += 1
 
-
-adj = g.get_adjacency()
-# writeMatrixToPnms(adj, 'initial_matrix.pnm', 'partitioned_matrix.pnm', sourceNodes, destNodes, nodesInPartS, nodesInPartD);
-writeInitialGraphToFile(adj, sourceNodes, destNodes, '1.txt')
-writePartitionedGraphToFile(nodesInPartS, nodesInPartD, part, adj, sourceNodes, destNodes, '2.txt')
+    # write files
+    sourceNodes = [i for i, x in enumerate(g.vs["type"]) if x == False]
+    destNodes = [i for i, x in enumerate(g.vs["type"]) if x == True]
+    adj = g.get_adjacency()
+    # writeMatrixToPnms(adj, 'initial_matrix.pnm', 'partitioned_matrix.pnm', sourceNodes, destNodes, nodesInPartS, nodesInPartD);
+    writeInitialGraphToFile(adj, sourceNodes, destNodes, '1.txt')
+    writePartitionedGraphToFile(nodesInPartS, nodesInPartD, part, adj, sourceNodes, destNodes, '2.txt')
 
 
 # layout = g.layout("kk")
