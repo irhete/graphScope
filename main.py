@@ -2,6 +2,7 @@ from igraph import *
 from Queue import PriorityQueue
 from write_graph import *
 from graphScope import *
+import time
 
 
 class Edge:
@@ -26,7 +27,7 @@ def readEdges(fileName):
 # start!
 types = {}
 edges = PriorityQueue()
-readEdges("edgelists/edgelist_noise_1pct.txt")
+readEdges("edgelists/edgelist_noise_10pct.txt")
 graphSegments = []
 
 while(not edges.empty()):
@@ -41,25 +42,29 @@ while(not edges.empty()):
     graphSegments.append(g)
 
 
+
 timestamp = 1
+segments = []
 for g in graphSegments:
     print "timestamp", timestamp, "\n"
-    result = partitionGraph(g, 2)
+    result = partitionGraph(g, 3)
     nodesInPartS = result[0]
     nodesInPartD = result[1]
     part = result[2]
     print "\n"
     timestamp += 1
+    segments.append(GraphSegment(g, result[0], result[1], result[2]))
+        # # write files
 
-    # write files
-    sourceNodes = [i for i, x in enumerate(g.vs["type"]) if x == False]
-    destNodes = [i for i, x in enumerate(g.vs["type"]) if x == True]
-    adj = g.get_adjacency()
-    # writeMatrixToPnms(adj, 'initial_matrix.pnm', 'partitioned_matrix.pnm', sourceNodes, destNodes, nodesInPartS, nodesInPartD);
-    writeInitialGraphToFile(adj, sourceNodes, destNodes, '1.txt')
-    writePartitionedGraphToFile(nodesInPartS, nodesInPartD, part, adj, sourceNodes, destNodes, '2.txt')
+    
+j = 0
+while j < len(segments) - 1:
+    resultSegment = graphScope(segments[j], segments[j+1])
+    segments[j:j+2] = resultSegment
+    if len(resultSegment) == 2:
+        j+=1
+     
 
 
-# layout = g.layout("kk")
-# plot(g, layout = layout)
+
   
