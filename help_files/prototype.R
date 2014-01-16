@@ -54,8 +54,8 @@ edgelist = edgelist[-which(duplicated(edgelist)==TRUE),]
 
 ##########################
 set.seed(round(runif(1, min=2, max = 200),0))
-a = 0:999
-b = 1000:1999
+a = 0:499
+b = 500:999
 groups = 4
 sources = split_fn(x=a, groups = 4)
 destinations = split_fn(x =b,groups = 4)
@@ -70,7 +70,7 @@ edgelist = cbind.data.frame(edgelist,1)
 
 #introducing noise
 edges_total = nrow(edgelist)
-prcnt_noise = 0.25
+prcnt_noise = 0.01
 #delete 0.5% of edges
 deletions = round((prcnt_noise/2)*edges_total,0)
 #set.seed(6576)
@@ -88,7 +88,7 @@ edgelist = rbind.data.frame(edgelist,added_edges)
 
 edgelist = edgelist[-which(duplicated(edgelist)==TRUE),]
 
-write.table(edgelist, "C:/Users/v-anleon/Desktop/Tartu_University/Algorithmics2013/project_bins/data/edgelist_noise_25pct.txt", col.names= FALSE, row.names = FALSE, sep =';')
+write.table(edgelist, "C:/Users/v-anleon/Desktop/Tartu_University/Algorithmics2013/project_bins/data/edgelist_500_noise_1pct.txt", col.names= FALSE, row.names = FALSE, sep =';')
 
 #reading in the order found by the algorithm
 con  <- file("orderings.txt", open = "r")
@@ -115,3 +115,16 @@ l <-layout.reingold.tilford(g)
 new.layout = cbind(l[,1],c(rep(0,10),rep(1,nrow(l)-10)))
 plot(g, mark.groups=list(0:9),layout=new.layout)
 g = graph.data.frame(edgelist, directed = FALSE)
+
+###
+prct1 = read.table("C:/Users/v-anleon/Desktop/Tartu_University/Algorithmics2013/project/edgelists/edgelist_noise_1pct.txt", header = FALSE, sep = ';')
+names(prct1) = c("source_nodes","destin_nodes","timestamp")
+bipartite_adj = as.matrix(table(prct1$source_nodes, prct1$destin_nodes))
+initial = bipartite_adj[,]
+k = seriate(initial)
+source_order = get_order(k,1)
+destination_order = get_order(k,2)
+reordered = bipartite_adj[source_order, destination_order]
+reordered = as.data.frame(reordered)
+
+write.table(reordered, "C:/Users/v-anleon/Desktop/Tartu_University/Algorithmics2013/project/edgelists/reodered_noise_1pct.txt", col.names =FALSE, row.names=FALSE)
