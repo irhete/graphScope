@@ -247,9 +247,9 @@ def partitionGraph(g, iterations, numberOfSegments = 1):
         print "source:", nodesInPartS, "\n dest:", nodesInPartD, "\n partitioning", part, "\n"
         
         adj = g.get_adjacency()
-        writeMatrixToPnms(adj, 'output/initial_matrix_noise_10.pnm', 'output/partitioned_noise_10_iter_' + str(i) + '.pnm', sourceNodes, destNodes, nodesInPartS, nodesInPartD);
-        writeInitialGraphToFile(adj, sourceNodes, destNodes, 'output/initial_matrix_noise_10.txt')
-        writePartitionedGraphToFile(nodesInPartS, nodesInPartD, part, adj, sourceNodes, destNodes, 'output/partitioned_noise_10_iter_' + str(i) + '.txt')
+        writeMatrixToPnms(adj, 'output/initial_matrix_noise_1.pnm', 'output/partitioned_noise_1_iter_' + str(i) + '.pnm', sourceNodes, destNodes, nodesInPartS, nodesInPartD);
+        writeInitialGraphToFile(adj, sourceNodes, destNodes, 'output/initial_matrix_noise_50.txt')
+        writePartitionedGraphToFile(nodesInPartS, nodesInPartD, part, adj, sourceNodes, destNodes, 'output/partitioned_noise_50_iter_' + str(i) + '.txt')
 
     return [nodesInPartS, nodesInPartD, part]
 

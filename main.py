@@ -27,7 +27,7 @@ def readEdges(fileName):
 # start!
 types = {}
 edges = PriorityQueue()
-readEdges("edgelists/edgelist_noise_10pct.txt")
+readEdges("edgelists/edgelist_noise_1pct.txt")
 graphSegments = []
 
 while(not edges.empty()):
@@ -47,7 +47,7 @@ timestamp = 1
 segments = []
 for g in graphSegments:
     print "timestamp", timestamp, "\n"
-    result = partitionGraph(g, 3)
+    result = partitionGraph(g, 5)
     nodesInPartS = result[0]
     nodesInPartD = result[1]
     part = result[2]
