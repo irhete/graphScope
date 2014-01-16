@@ -27,7 +27,7 @@ def readEdges(fileName):
 # start!
 types = {}
 edges = PriorityQueue()
-readEdges("edgelists/edgelist_noise_10pct.txt")
+readEdges("edgelists/edgelist_noise_2pct.txt")
 graphSegments = []
 
 while(not edges.empty()):
