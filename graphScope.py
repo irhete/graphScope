@@ -19,7 +19,7 @@ def graphScope(segment, newSegment):
     
     unionGraph = Graph.Bipartite(segment.g.vs["type"], segment.g.get_edgelist(), directed=False)
     unionGraph.add_edges(newSegment.g.get_edgelist())
-    resultUnion = partitionGraph(unionGraph, 2, segment.segments + 1)
+    resultUnion = partitionGraph(unionGraph, 1, segment.segments + 1)
     unionSegment = GraphSegment(unionGraph, resultUnion[0], resultUnion[1], resultUnion[2])
     encodingCostUnion = totalCostForSegment(unionSegment, segment.segments + 1)
     print "encodingCostUnion", encodingCostUnion
@@ -246,11 +246,15 @@ def partitionGraph(g, iterations, numberOfSegments = 1):
         part = result[1]
         print "source:", nodesInPartS, "\n dest:", nodesInPartD, "\n partitioning", part, "\n"
         
+<<<<<<< Updated upstream
         adj = g.get_adjacency()
         writeMatrixToPnms(adj, 'output/initial_matrix_wo.pnm', 'output/partitioned_noise_wo_iter_' + str(i) + '.pnm', sourceNodes, destNodes, nodesInPartS, nodesInPartD);
         writeInitialGraphToFile(adj, sourceNodes, destNodes, 'output/initial_matrix_noise_wo.txt')
         writePartitionedGraphToFile(nodesInPartS, nodesInPartD, part, adj, sourceNodes, destNodes, 'output/partitioned_noise_wo_iter_' + str(i) + '.txt')
 
+=======
+      
+>>>>>>> Stashed changes
     return [nodesInPartS, nodesInPartD, part]
 
 # def segmentGraphToPartitions(segment, newGraph):

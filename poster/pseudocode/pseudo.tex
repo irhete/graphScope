@@ -1,0 +1,52 @@
+\documentclass{article}
+\usepackage[ruled,vlined]{algorithm2e}
+
+
+
+
+\begin{document}
+\IncMargin{1em}
+\begin{algorithm}
+\SetKwData{SourceNodes}{sourceNodes}\SetKwData{Node}{node}\SetKwData{Partition}{partition}\SetKwData{NewPartition}{newPartition}
+\SetKwFunction{AverageEntropy}{averageEntropy}\SetKwFunction{CreatePartition}{createPartition}\SetKwFunction{FindPartitionWithLargestAverageEntropy}{findPartitionWithLargestAverageEntropy}
+\SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+\Input{graph, initial partitioning}
+\Output{new partitioning}
+\BlankLine
+\tcp{split}
+\Partition$\leftarrow$ partition with largest average entropy
+
+\ForEach{\Node in \Partition}{
+  \If{average entropy of \Partition reduces without \Node}
+    {assign \Node to new partition}
+}
+\BlankLine
+\tcp{update}
+\ForEach{\Node in \SourceNodes}{
+  assign \Node to partition with minimal cost
+}
+\BlankLine
+\tcp{merge}
+\ForEach{partition pair ($p1$, $p2$)}{
+  \If{total encoding cost decreases when $p1$ merged with $p2$}
+    {merge ($p1$, $p2$)}
+}
+\caption{PartitionGraph}
+\end{algorithm}\DecMargin{1em}
+
+
+\begin{algorithm}
+\SetKwData{NewGraph}{newGraph}\SetKwData{NewGraphCost}{newGraphCost}\SetKwData{Segment}{segment}\SetKwData{SegmentCost}{segmentCost}\SetKwData{UnionCost}{unionCost}
+\SetKwFunction{TotalCost}{totalCost}\SetKwFunction{CreatePartition}{createPartition}\SetKwFunction{FindPartitionWithLargestAverageEntropy}{findPartitionWithLargestAverageEntropy}
+\SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+\Input{segment, new graph}
+\BlankLine
+\NewGraphCost$\leftarrow$ \TotalCost{\NewGraph}\;
+\SegmentCost$\leftarrow$ \TotalCost{\Segment}\;
+\UnionCost$\leftarrow$ \TotalCost{\Segment $\cup$ \NewGraph}\;
+\If{\UnionCost - \SegmentCost \textless  \NewGraphCost}
+    {\Segment$\leftarrow$ \Segment $\cup$ \NewGraph}
+\caption{SegmentGraphStream\label{IR}}
+\end{algorithm}\DecMargin{1em}
+
+\end{document} 

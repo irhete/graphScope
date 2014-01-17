@@ -1,0 +1,42 @@
+encodingCostUnion 38101.2329965
+encodingCostSegment 19644.7179134
+encodingCostNewGraph 19083.6691865
+
+encodingCostUnion 58818.2847862
+encodingCostSegment 38101.2329965
+encodingCostNewGraph 20900.5369228
+
+encodingCostUnion 77163.7690231
+encodingCostSegment 58818.2847862
+encodingCostNewGraph 19349.4909128
+
+encodingCostUnion 96340.4144965
+encodingCostSegment 77163.7690231
+encodingCostNewGraph 20290.4546322
+
+encodingCostUnion 116063.825441
+encodingCostSegment 96340.4144965
+encodingCostNewGraph 19949.9832473
+
+encodingCostUnion 134277.775204
+encodingCostSegment 116063.825441
+encodingCostNewGraph 20085.8445632
+
+encodingCostUnion 153288.211326
+encodingCostSegment 134277.775204
+encodingCostNewGraph 20235.9132519
+
+encodingCostUnion 171303.677295
+encodingCostSegment 153288.211326
+encodingCostNewGraph 19654.3192847
+
+encodingCostUnion 190549.624795
+encodingCostSegment 171303.677295
+encodingCostNewGraph 20046.0304804
+
+encodingCostUnion 204255.807237
+encodingCostSegment 190549.624795
+encodingCostNewGraph 13066.2375368
+
+segment number: 1 segment count: 10
+segment number: 2 segment count: 1
